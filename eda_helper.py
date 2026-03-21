@@ -111,12 +111,12 @@ def analyze_image_sizes(data_dir):
 
 
 # CHANNEL CHECK
-def check_image_channels(data_dir, num_samples=50):
+def check_image_channels(data_dir):
     shapes = defaultdict(int)
 
     for cls in os.listdir(data_dir):
         cls_path = os.path.join(data_dir, cls)
-        images = os.listdir(cls_path)[:num_samples]
+        images = os.listdir(cls_path)
 
         for file in tqdm(images, desc=f"Channels ({cls})"):
             try:
@@ -149,19 +149,18 @@ def find_corrupted_images(data_dir):
 
 
 # PIXEL DISTRIBUTION
-def pixel_distribution(data_dir, output_dir, filename, num_images=100):
+def pixel_distribution(data_dir, output_dir, filename):
     pixels = []
 
     classes = os.listdir(data_dir)
 
     for cls in classes:
         cls_path = os.path.join(data_dir, cls)
-        images = os.listdir(cls_path)
+        files = os.listdir(cls_path)
 
-        for img_name in tqdm(images[:max(1, num_images // len(classes))],
-                             desc=f"Pixels ({cls})"):
+        for file in tqdm(files, desc=f"Pixels ({cls})"):
             try:
-                img = Image.open(os.path.join(cls_path, img_name)).convert('L')
+                img = Image.open(os.path.join(cls_path, files)).convert('L')
                 pixels.extend(np.array(img).flatten())
             except:
                 continue

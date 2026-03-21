@@ -39,13 +39,13 @@ def main():
     import matplotlib.pyplot as plt
 
     plt.figure()
-    plt.hist(widths, bins=20)
+    plt.hist(widths, bins=50)
     plt.title("Width Distribution")
     plt.savefig(os.path.join(output_dir, "width_distribution.png"))
     plt.close()
 
     plt.figure()
-    plt.hist(heights, bins=20)
+    plt.hist(heights, bins=50)
     plt.title("Height Distribution")
     plt.savefig(os.path.join(output_dir, "height_distribution.png"))
     plt.close()
