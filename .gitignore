@@ -3,3 +3,4 @@
 **/seg_pred/
 **/archive.zip
 eda_result/
+*.pyc
