@@ -1,52 +1,43 @@
-1. Basic dataset overview
+0. Extract archive.zip file inside ./dataset
 
-This is the first layer of EDA.
+------------------------------------------------------------
 
+1. Basic dataset overview (basic_overview.txt)
+The first layer of EDA.
 You should know:
+- total number of images
+- number of classes & class names
+- number of images in each split:
+  + train (seg_train)
+  + test
+  + prediction
+- number of images in each class inside each split
 
-total number of images
-number of classes
-class names and label mapping
-number of images in each split:
-- train
-- test
-- prediction
-number of images in each class inside each split
+Why matter?
+- confirms the dataset was loaded correctly
+- shows whether class imbalance exists
+- helps you describe the dataset formally in the report
 
-Why this matters:
+------------------------------------------------------------
 
-confirms the dataset was loaded correctly
-shows whether class imbalance exists
-helps you describe the dataset formally in the report
-
-Example outputs:
-
-total images: 25,000
-train: 14,000
-test: 3,000
-prediction: 7,000
-class distribution bar chart
-
-
-2. File and data integrity checks
-
+2. File and data integrity checks (integrity_check.txt)
 Before any model work, check whether the dataset is clean.
-
 You should detect:
+- corrupted images
+- unreadable files
+- empty files
+- wrong file extensions
+- duplicate images
+- duplicated filenames
+- non-image files accidentally inside folders
 
-corrupted images
-unreadable files
-empty files
-wrong file extensions
-duplicate images
-duplicated filenames
-non-image files accidentally inside folders
+Why matters?
+- broken files can crash training code
+- duplicates can bias the model
+- dirty folders often cause hidden bugs
 
-Why this matters:
+------------------------------------------------------------
 
-broken files can crash training code
-duplicates can bias the model
-dirty folders often cause hidden bugs
 3. Image properties
 
 Even though the dataset says 150×150, you should still verify it.

@@ -17,6 +17,10 @@ def main():
     generate_basic_overview(dataset_info)
     print("[STEP 1] DONE: basic_overview.txt generated in ./results")
 
+    # STEP 2
+    generate_integrity_check(dataset_info)
+    print("[STEP 2] DONE: integrity_check.txt generated in ./results")
+
 
 if __name__ == "__main__":
     main()

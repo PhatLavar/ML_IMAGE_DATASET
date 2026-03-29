@@ -1,5 +1,7 @@
 from pathlib import Path
 import zipfile
+import hashlib
+from PIL import Image
 import os
 
 
@@ -139,3 +141,112 @@ def generate_basic_overview(dataset_info: dict):
         f.write(overview_content)
 
     print(f"[INFO] Basic overview written to: {basic_overview_path}")
+
+
+
+"""
+Step 2:
+- Check the integrity of the dataset.
+- Detect corrupted images, unreadable files, empty files, wrong file extensions, duplicate images, duplicated filenames, and non-image files.
+- Save the results to integrity_check.txt inside ./EDA/results.
+
+Returns:
+    None
+"""
+def generate_integrity_check(dataset_info: dict):
+    dataset_dir = dataset_info["dataset_dir"]
+    seg_pred_dir = dataset_info["seg_pred_dir"]
+    seg_test_dir = dataset_info["seg_test_dir"]
+    seg_train_dir = dataset_info["seg_train_dir"]
+    results_dir = dataset_info["dataset_dir"].parent / "EDA" / "results"
+    integrity_check_path = results_dir / "integrity_check.txt"
+
+    def is_image_valid(image_path):
+        try:
+            img = Image.open(image_path)
+            img.verify()  # Verify if the image is corrupt
+            return True
+        except Exception:
+            return False
+
+    def get_file_hash(file_path):
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            # Read and update hash string value in blocks of 4K
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        return sha256_hash.hexdigest()
+
+    # Initialize checks
+    corrupted_files = []
+    unreadable_files = []
+    empty_files = []
+    wrong_extension_files = []
+    duplicate_images = {}
+    non_image_files = []
+    duplicated_filenames = {}
+
+    # Helper function to scan folders
+    def scan_folder(folder_path, folder_name):
+        for image_path in folder_path.rglob("*"):
+            if image_path.is_file():
+                file_extension = image_path.suffix.lower()
+                if file_extension not in [".jpg", ".jpeg", ".png", ".bmp"]:
+                    non_image_files.append(image_path)
+                elif not is_image_valid(image_path):
+                    corrupted_files.append(image_path)
+                elif image_path.stat().st_size == 0:
+                    empty_files.append(image_path)
+                elif file_extension not in [".jpg", ".jpeg"]:
+                    wrong_extension_files.append(image_path)
+
+                # Handle duplicate images by hash
+                file_hash = get_file_hash(image_path)
+                if file_hash in duplicate_images:
+                    duplicate_images[file_hash].append(image_path)
+                else:
+                    duplicate_images[file_hash] = [image_path]
+
+                # Handle duplicated filenames
+                filename = image_path.name
+                if filename in duplicated_filenames:
+                    duplicated_filenames[filename].append(image_path)
+                else:
+                    duplicated_filenames[filename] = [image_path]
+
+    # Scan all folders
+    scan_folder(seg_train_dir, "train")
+    scan_folder(seg_test_dir, "test")
+    scan_folder(seg_pred_dir, "prediction")
+
+    # Write results to file
+    with open(integrity_check_path, "w") as f:
+        f.write("Corrupted Files:\n")
+        for file in corrupted_files:
+            f.write(f"  {file}\n")
+        f.write("\nUnreadable Files:\n")
+        for file in unreadable_files:
+            f.write(f"  {file}\n")
+        f.write("\nEmpty Files:\n")
+        for file in empty_files:
+            f.write(f"  {file}\n")
+        f.write("\nWrong File Extensions:\n")
+        for file in wrong_extension_files:
+            f.write(f"  {file}\n")
+        f.write("\nDuplicate Images:\n")
+        for file_hash, files in duplicate_images.items():
+            if len(files) > 1:
+                f.write(f"  Duplicate Hash: {file_hash}\n")
+                for file in files:
+                    f.write(f"    {file}\n")
+        f.write("\nDuplicated Filenames:\n")
+        for filename, files in duplicated_filenames.items():
+            if len(files) > 1:
+                f.write(f"  Filename: {filename}\n")
+                for file in files:
+                    f.write(f"    {file}\n")
+        f.write("\nNon-Image Files:\n")
+        for file in non_image_files:
+            f.write(f"  {file}\n")
+
+    print(f"[INFO] Integrity check results written to: {integrity_check_path}")
