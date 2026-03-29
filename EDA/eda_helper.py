@@ -3,6 +3,8 @@ import zipfile
 import hashlib
 from PIL import Image
 import os
+from collections import Counter
+import numpy as np
 
 def get_dataset_info(project_root: Path):
     dataset_dir = project_root / "dataset"
@@ -352,3 +354,134 @@ def generate_integrity_check(dataset_info: dict):
         write_section(f, "Non-Image Files", non_image_files, format_short_path)
 
     print(f"[INFO] Integrity check results written to: {integrity_check_path}")
+
+
+
+"""
+Step 3:
+- Inspect image properties in the dataset.
+- Check width and height distribution, whether all images are 150x150, number of channels, data type, and file format distribution.
+- Save the results to image_properties.txt inside ./EDA/results.
+
+Returns:
+    None
+"""
+def generate_image_properties(dataset_info: dict):
+    seg_pred_dir = dataset_info["seg_pred_dir"]
+    seg_test_dir = dataset_info["seg_test_dir"]
+    seg_train_dir = dataset_info["seg_train_dir"]
+
+    results_dir = dataset_info["dataset_dir"].parent / "EDA" / "results"
+    if not results_dir.exists():
+        os.makedirs(results_dir)
+
+    image_properties_path = results_dir / "image_properties.txt"
+
+    valid_image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".webp"}
+
+    total_images = 0
+    unreadable_images = []
+
+    width_distribution = Counter()
+    height_distribution = Counter()
+    resolution_distribution = Counter()
+    channel_distribution = Counter()
+    dtype_distribution = Counter()
+    file_format_distribution = Counter()
+
+    images_150_150 = 0
+    images_not_150_150 = 0
+
+    def detect_channel_type(img_array):
+        if img_array.ndim == 2:
+            return "grayscale"
+        elif img_array.ndim == 3:
+            if img_array.shape[2] == 3:
+                return "RGB"
+            elif img_array.shape[2] == 4:
+                return "RGBA"
+            else:
+                return f"other_{img_array.shape[2]}ch"
+        else:
+            return "unknown"
+
+    def scan_folder(folder_path):
+        nonlocal total_images, images_150_150, images_not_150_150
+
+        for file_path in folder_path.rglob("*"):
+            if not file_path.is_file():
+                continue
+
+            if file_path.suffix.lower() not in valid_image_extensions:
+                continue
+
+            try:
+                with Image.open(file_path) as img:
+                    img_array = np.array(img)
+
+                    width, height = img.size
+                    width_distribution[width] += 1
+                    height_distribution[height] += 1
+                    resolution_distribution[f"{width}x{height}"] += 1
+
+                    if width == 150 and height == 150:
+                        images_150_150 += 1
+                    else:
+                        images_not_150_150 += 1
+
+                    channel_type = detect_channel_type(img_array)
+                    channel_distribution[channel_type] += 1
+
+                    dtype_distribution[str(img_array.dtype)] += 1
+
+                    file_format_distribution[file_path.suffix.lower().lstrip(".")] += 1
+
+                    total_images += 1
+
+            except Exception:
+                unreadable_images.append(file_path)
+
+    print("[INFO] Scanning image properties in dataset folders")
+    scan_folder(seg_train_dir)
+    scan_folder(seg_test_dir)
+    scan_folder(seg_pred_dir)
+
+    def write_distribution(f, title, counter_obj, total):
+        f.write(f"{title}:\n")
+        if not counter_obj:
+            f.write("  None\n\n")
+            return
+
+        for key, count in sorted(counter_obj.items()):
+            percentage = (count / total) * 100 if total > 0 else 0
+            f.write(f"  {key}: {count} ({percentage:.2f}%)\n")
+        f.write("\n")
+
+    with open(image_properties_path, "w", encoding="utf-8") as f:
+        f.write(f"Total readable images analyzed: {total_images}\n")
+        f.write(f"Unreadable images skipped: {len(unreadable_images)}\n\n")
+
+        if total_images > 0:
+            f.write(f"Images with size 150x150: {images_150_150} ({(images_150_150 / total_images) * 100:.2f}%)\n")
+            f.write(f"Images with size not equal to 150x150: {images_not_150_150} ({(images_not_150_150 / total_images) * 100:.2f}%)\n")
+            f.write(f"All images are 150x150: {'Yes' if images_not_150_150 == 0 else 'No'}\n\n")
+        else:
+            f.write("Images with size 150x150: 0 (0.00%)\n")
+            f.write("Images with size not equal to 150x150: 0 (0.00%)\n")
+            f.write("All images are 150x150: No\n\n")
+
+        write_distribution(f, "Width Distribution", width_distribution, total_images)
+        write_distribution(f, "Height Distribution", height_distribution, total_images)
+        write_distribution(f, "Resolution Distribution", resolution_distribution, total_images)
+        write_distribution(f, "Channel Distribution", channel_distribution, total_images)
+        write_distribution(f, "Data Type Distribution", dtype_distribution, total_images)
+        write_distribution(f, "File Format Distribution", file_format_distribution, total_images)
+
+        f.write("Unreadable Images Skipped:\n")
+        if not unreadable_images:
+            f.write("  None\n")
+        else:
+            for file_path in unreadable_images:
+                f.write(f"  {file_path}\n")
+
+    print(f"[INFO] Image properties written to: {image_properties_path}")

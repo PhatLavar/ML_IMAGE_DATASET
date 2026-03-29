@@ -39,28 +39,21 @@ Why matters?
 ------------------------------------------------------------
 
 3. Image properties
-
 Even though the dataset says 150×150, you should still verify it.
-
 You should inspect:
-
-image width and height distribution
-whether all images are truly 150×150
-number of channels:
-grayscale
-RGB
-RGBA
-data type if loaded as arrays
-file format distribution:
-jpg
-png
-jpeg
+- image width and height distribution
+- whether all images are truly 150×150 (Yes/No)
+- number of channels: grayscale, RGB, RGBA
+- data type if loaded as arrays
+- file format distribution: jpg, png, jpeg,...
 
 Why this matters:
+- preprocessing depends on image consistency
+- if some images are grayscale or RGBA, you may need conversion to RGB
+- if sizes differ, resizing must be included
 
-preprocessing depends on image consistency
-if some images are grayscale or RGBA, you may need conversion to RGB
-if sizes differ, resizing must be included
+------------------------------------------------------------
+
 4. Class balance
 
 This is one of the most important EDA parts for classification.

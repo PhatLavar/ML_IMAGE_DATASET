@@ -7,6 +7,7 @@ How to run the EDA process: python run.py <step>
 - For Step 0 (Extract dataset): python run.py eda_step_0
 - For Step 1 (Generate basic overview): python run.py eda_step_1
 - For Step 2 (Generate integrity check): python run.py eda_step_2
+- For Step 3 (Generate image properties): python run.py eda_step_3
 """
 
 def run_step(step):

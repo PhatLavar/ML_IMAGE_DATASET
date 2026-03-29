@@ -41,6 +41,17 @@ def eda_step_2(dataset_info=None):
     print("[STEP 2] DONE: integrity_check.txt generated in ./results")
     print("\n======================================================================")
 
+def eda_step_3(dataset_info=None):
+    print("\n[STEP 3] STARTING.")
+
+    if dataset_info is None:
+        print("[INFO] No dataset_info provided, calling get_dataset_info to retrieve dataset details.")
+        dataset_info = get_dataset_info(Path(__file__).resolve().parent.parent)
+
+    generate_image_properties(dataset_info)
+    print("[STEP 3] DONE: image_properties.txt generated in ./results")
+    print("\n======================================================================")
+
 def main(step=None):
     pre_text()
     dataset_info = None  
@@ -50,15 +61,19 @@ def main(step=None):
         if dataset_info:
             eda_step_1(dataset_info)
             eda_step_2(dataset_info)
+            eda_step_3(dataset_info)
 
     elif step == "eda_step_0":
         eda_step_0()
 
     elif step == "eda_step_1":
-        eda_step_1(dataset_info)  # Call with or without dataset_info
+        eda_step_1(dataset_info)
 
     elif step == "eda_step_2":
-        eda_step_2(dataset_info)  # Call with or without dataset_info
+        eda_step_2(dataset_info)
+
+    elif step == "eda_step_3":
+        eda_step_3(dataset_info)
 
     else:
         print("\n[ERROR] Invalid step specified.\n")
