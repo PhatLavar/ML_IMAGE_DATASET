@@ -1,0 +1,63 @@
+Similarity / Duplicate Leakage Check
+Exact duplicates use SHA-256 file hash.
+
+Exact Duplicates Within Train:
+  Duplicate Hash: bc7d06d89f0cdd63f7bab9c4bd1dc9a0d6ea543c64e51b16a395e1657eea22ad
+  Train (buildings): 4551.jpg
+  Train (street): 1495.jpg
+  Duplicate Hash: 08d8cd29e9b79273795a13092575d9b3435c000e7d4c1769f459d363ae5436e4
+  Train (buildings): 5069.jpg
+  Train (street): 2764.jpg
+  Duplicate Hash: 9d7de1bd8ef0d88a880b0a9e550cf5ab5adae5b621c0affbe61fab621353d73f
+  Train (buildings): 9769.jpg
+  Train (street): 7293.jpg
+  Duplicate Hash: 4be57f1d67778164f50feb6090cb8a7b08ebe7637e582aa1adce521a8f372c84
+  Train (forest): 15657.jpg
+  Train (forest): 18807.jpg
+  Duplicate Hash: ae6838624dc0ac2bf8993ce82b8f02a460b31878be8e68e1cfce0324e7c77dc4
+  Train (forest): 8688.jpg
+  Train (forest): 8689.jpg
+  Duplicate Hash: 2b910be7ec5a40d59756d966c93e7d159d8e49918a6af3ddf1e406b5199e237b
+  Train (glacier): 10234.jpg
+  Train (mountain): 7654.jpg
+  Duplicate Hash: 2702b4f323040bfd64caf52d56242cae54bf15bde9909f1d2cda57c25f81c82e
+  Train (glacier): 16044.jpg
+  Train (mountain): 17775.jpg
+  Duplicate Hash: 95cf645dcc5e71a7b76d72f8c3cd38aa78a5a78d17bad66d9bcc376ea5a68d47
+  Train (glacier): 16827.jpg
+  Train (mountain): 15770.jpg
+  Duplicate Hash: ec26362c10297d9f6f77bc1ab6d13c0b607f6041733d089539ba7c87dc242147
+  Train (glacier): 19319.jpg
+  Train (mountain): 6518.jpg
+  Duplicate Hash: 9554e9a19a81fdb395d211435358b162de31c2b3acb020e6e863ae43f136a999
+  Train (glacier): 8191.jpg
+  Train (mountain): 16696.jpg
+  Duplicate Hash: 8ff16db30c2e6742a953797dcfa43cad0e07fc420b0538b35f9043bc2e3179fc
+  Train (glacier): 8608.jpg
+  Train (mountain): 19959.jpg
+  Duplicate Hash: 8abeea822034f73fc5c499b11e1f893ee0144e48055a5f46cc9bbac372fe2ce8
+  Train (mountain): 7037.jpg
+  Train (sea): 6337.jpg
+  Duplicate Hash: 95ce860e4297c1eeb46ec0b5df2f45b680693596ad624e59853d90fde351ba85
+  Train (sea): 19255.jpg
+  Train (sea): 7872.jpg
+  Duplicate Hash: 5df7ef50dcb17f18dce56d30afcb45e2e00e610421051f93616d88628c21aac9
+  Train (street): 17693.jpg
+  Train (street): 7618.jpg
+  Duplicate Hash: 7823265cfabfe064e9c63afeb438932e476df252e07f71f04b2a67fa7f1e11cc
+  Train (street): 3492.jpg
+  Train (street): 373.jpg
+
+Exact Duplicates Within Test: None
+
+Exact Duplicates Across Train and Test:
+  Duplicate Hash: 1ef964e4f5290d17f34a66ee36b72e8ca53e01286dcc09dba7d10b591eb40a7a
+  Train (buildings): 4634.jpg
+  Test (street): 21170.jpg
+  Duplicate Hash: f90543d3b4dcef4e278a047de7626fa3d5122abd7f3458e047887c553bb58d58
+  Train (mountain): 14341.jpg
+  Test (glacier): 21469.jpg
+  Duplicate Hash: 4f93f75b82d15e088b08ab1ba544de749e139437628d9b38b317e67c663abf4c
+  Train (street): 10408.jpg
+  Test (buildings): 20805.jpg
+

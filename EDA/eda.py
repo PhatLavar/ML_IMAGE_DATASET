@@ -1,9 +1,11 @@
 from pathlib import Path
 from EDA.eda_helper import *
 
+
 def pre_text():
     print("\nEDA PROCESS STARTED !!!")
     print("\n======================================================================")
+
 
 def eda_step_0():
     print("\n[STEP 0] STARTING.")
@@ -19,6 +21,7 @@ def eda_step_0():
     print("\n======================================================================")
     return dataset_info
 
+
 def eda_step_1(dataset_info=None):
     print("\n[STEP 1] STARTING.")
 
@@ -29,6 +32,7 @@ def eda_step_1(dataset_info=None):
     generate_basic_overview(dataset_info)
     print("[STEP 1] DONE: basic_overview.txt generated in ./results")
     print("\n======================================================================")
+
 
 def eda_step_2(dataset_info=None):
     print("\n[STEP 2] STARTING.")
@@ -41,6 +45,7 @@ def eda_step_2(dataset_info=None):
     print("[STEP 2] DONE: integrity_check.txt generated in ./results")
     print("\n======================================================================")
 
+
 def eda_step_3(dataset_info=None):
     print("\n[STEP 3] STARTING.")
 
@@ -52,6 +57,19 @@ def eda_step_3(dataset_info=None):
     print("[STEP 3] DONE: image_properties.txt generated in ./results")
     print("\n======================================================================")
 
+
+def eda_step_4(dataset_info=None):
+    print("\n[STEP 4] STARTING.")
+
+    if dataset_info is None:
+        print("[INFO] No dataset_info provided, calling get_dataset_info to retrieve dataset details.")
+        dataset_info = get_dataset_info(Path(__file__).resolve().parent.parent)
+
+    generate_similarity_leakage_check(dataset_info)
+    print("[STEP 4] DONE: similarity_leakage_check.txt generated in ./results")
+    print("\n======================================================================")
+
+
 def main(step=None):
     pre_text()
     dataset_info = None  
@@ -62,6 +80,7 @@ def main(step=None):
             eda_step_1(dataset_info)
             eda_step_2(dataset_info)
             eda_step_3(dataset_info)
+            eda_step_4(dataset_info)
 
     elif step == "eda_step_0":
         eda_step_0()
@@ -74,6 +93,9 @@ def main(step=None):
 
     elif step == "eda_step_3":
         eda_step_3(dataset_info)
+
+    elif step == "eda_step_4":
+        eda_step_4(dataset_info)
 
     else:
         print("\n[ERROR] Invalid step specified.\n")

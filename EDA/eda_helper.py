@@ -181,16 +181,13 @@ def generate_basic_overview(dataset_info: dict):
 """
 Step 2:
 - Check the integrity of the dataset.
-- Detect corrupted images, unreadable files, empty files, wrong file extensions, duplicate images, duplicated filenames, and non-image files.
+- Detect corrupted images, unreadable files, empty files, wrong file extensions, duplicated filenames, and non-image files.
 - Save the results to integrity_check.txt inside ./EDA/results.
 
 Returns:
     None
 """
 def generate_integrity_check(dataset_info: dict):
-    from PIL import Image
-    import hashlib
-
     seg_pred_dir = dataset_info["seg_pred_dir"]
     seg_test_dir = dataset_info["seg_test_dir"]
     seg_train_dir = dataset_info["seg_train_dir"]
@@ -206,27 +203,18 @@ def generate_integrity_check(dataset_info: dict):
     empty_files = []
     wrong_extension_files = []
     non_image_files = []
-
-    duplicate_images = {}
     duplicated_filenames = {}
 
     valid_image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".webp"}
     expected_extensions = {".jpg", ".jpeg"}
 
-    def get_file_hash(file_path):
-        sha256_hash = hashlib.sha256()
-        with open(file_path, "rb") as f:
-            for byte_block in iter(lambda: f.read(4096), b""):
-                sha256_hash.update(byte_block)
-        return sha256_hash.hexdigest()
-
     def is_image_readable(file_path):
         try:
             with Image.open(file_path) as img:
                 img.load()
-            return True, None
-        except Exception as e:
-            return False, str(e)
+            return True
+        except Exception:
+            return False
 
     def format_short_path(file_path):
         file_path = Path(file_path)
@@ -234,17 +222,13 @@ def generate_integrity_check(dataset_info: dict):
         if seg_train_dir in file_path.parents:
             rel = file_path.relative_to(seg_train_dir)
             if len(rel.parts) >= 2:
-                class_name = rel.parts[0]
-                filename = rel.name
-                return f"Train ({class_name}): {filename}"
+                return f"Train ({rel.parts[0]}): {rel.name}"
             return f"Train: {file_path.name}"
 
         elif seg_test_dir in file_path.parents:
             rel = file_path.relative_to(seg_test_dir)
             if len(rel.parts) >= 2:
-                class_name = rel.parts[0]
-                filename = rel.name
-                return f"Test ({class_name}): {filename}"
+                return f"Test ({rel.parts[0]}): {rel.name}"
             return f"Test: {file_path.name}"
 
         elif seg_pred_dir in file_path.parents:
@@ -266,13 +250,9 @@ def generate_integrity_check(dataset_info: dict):
             if not file_path.is_file():
                 continue
 
-            # duplicated filenames
             filename = file_path.name
-            if filename not in duplicated_filenames:
-                duplicated_filenames[filename] = []
-            duplicated_filenames[filename].append(file_path)
+            duplicated_filenames.setdefault(filename, []).append(file_path)
 
-            # empty files
             try:
                 if file_path.stat().st_size == 0:
                     empty_files.append(file_path)
@@ -283,41 +263,21 @@ def generate_integrity_check(dataset_info: dict):
 
             ext = file_path.suffix.lower()
 
-            # non-image files
             if ext not in valid_image_extensions:
                 non_image_files.append(file_path)
                 continue
 
-            # wrong file extensions
             if ext not in expected_extensions:
                 wrong_extension_files.append(file_path)
 
-            # corrupted / unreadable image
-            is_ok, _ = is_image_readable(file_path)
-            if not is_ok:
+            if not is_image_readable(file_path):
                 corrupted_files.append(file_path)
-                unreadable_files.append(file_path)
-                continue
-
-            # duplicate images by hash
-            try:
-                file_hash = get_file_hash(file_path)
-                if file_hash not in duplicate_images:
-                    duplicate_images[file_hash] = []
-                duplicate_images[file_hash].append(file_path)
-            except Exception:
                 unreadable_files.append(file_path)
 
     print("[INFO] Scanning dataset folders for integrity check")
     scan_folder(seg_train_dir)
     scan_folder(seg_test_dir)
     scan_folder(seg_pred_dir)
-
-    duplicate_image_groups = {
-        file_hash: paths
-        for file_hash, paths in duplicate_images.items()
-        if len(paths) > 1
-    }
 
     duplicated_filename_groups = {
         filename: paths
@@ -330,16 +290,6 @@ def generate_integrity_check(dataset_info: dict):
         write_section(f, "Unreadable Files", unreadable_files, format_short_path)
         write_section(f, "Empty Files", empty_files, format_short_path)
         write_section(f, "Wrong File Extensions", wrong_extension_files, format_short_path)
-
-        if not duplicate_image_groups:
-            f.write("Duplicate Images: None\n\n")
-        else:
-            f.write("Duplicate Images:\n")
-            for file_hash, paths in duplicate_image_groups.items():
-                f.write(f"  Duplicate Hash: {file_hash}\n")
-                for path in paths:
-                    f.write(f"  {format_short_path(path)}\n")
-            f.write("\n")
 
         if not duplicated_filename_groups:
             f.write("Duplicated Filenames: None\n\n")
@@ -485,3 +435,124 @@ def generate_image_properties(dataset_info: dict):
                 f.write(f"  {file_path}\n")
 
     print(f"[INFO] Image properties written to: {image_properties_path}")
+
+
+
+"""
+Step 4:
+- Check similarity and duplicate leakage between train and test splits.
+- Detect exact duplicates within train, exact duplicates within test, and exact duplicates across train and test using SHA-256 hashing.
+- Save the results to similarity_leakage_check.txt inside ./EDA/results.
+
+Returns:
+    None
+"""
+def generate_similarity_leakage_check(dataset_info: dict):
+    seg_test_dir = dataset_info["seg_test_dir"]
+    seg_train_dir = dataset_info["seg_train_dir"]
+
+    results_dir = dataset_info["dataset_dir"].parent / "EDA" / "results"
+    if not results_dir.exists():
+        os.makedirs(results_dir)
+
+    similarity_check_path = results_dir / "similarity_leakage_check.txt"
+
+    valid_image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".webp"}
+
+    def format_short_path(file_path):
+        file_path = Path(file_path)
+
+        if seg_train_dir in file_path.parents:
+            rel = file_path.relative_to(seg_train_dir)
+            if len(rel.parts) >= 2:
+                return f"Train ({rel.parts[0]}): {rel.name}"
+            return f"Train: {file_path.name}"
+
+        elif seg_test_dir in file_path.parents:
+            rel = file_path.relative_to(seg_test_dir)
+            if len(rel.parts) >= 2:
+                return f"Test ({rel.parts[0]}): {rel.name}"
+            return f"Test: {file_path.name}"
+
+        return str(file_path)
+
+    def get_file_hash(file_path):
+        sha256_hash = hashlib.sha256()
+        with open(file_path, "rb") as f:
+            for byte_block in iter(lambda: f.read(4096), b""):
+                sha256_hash.update(byte_block)
+        return sha256_hash.hexdigest()
+
+    def collect_image_records(folder_path, split_name):
+        records = []
+
+        for file_path in folder_path.rglob("*"):
+            if not file_path.is_file():
+                continue
+
+            if file_path.suffix.lower() not in valid_image_extensions:
+                continue
+
+            try:
+                sha256_value = get_file_hash(file_path)
+
+                records.append({
+                    "path": file_path,
+                    "split": split_name,
+                    "sha256": sha256_value
+                })
+            except Exception:
+                continue
+
+        return records
+
+    print("[INFO] Collecting train/test image hashes for similarity leakage check")
+    train_records = collect_image_records(seg_train_dir, "train")
+    test_records = collect_image_records(seg_test_dir, "test")
+    all_records = train_records + test_records
+
+    # --------------------------------------------------
+    # Exact duplicates
+    # --------------------------------------------------
+    sha_groups = {}
+    for record in all_records:
+        sha_groups.setdefault(record["sha256"], []).append(record)
+
+    exact_duplicates_within_train = []
+    exact_duplicates_within_test = []
+    exact_duplicates_across_train_test = []
+
+    for sha256_value, records in sha_groups.items():
+        train_group = [r for r in records if r["split"] == "train"]
+        test_group = [r for r in records if r["split"] == "test"]
+
+        if len(train_group) >= 2:
+            exact_duplicates_within_train.append((sha256_value, train_group))
+
+        if len(test_group) >= 2:
+            exact_duplicates_within_test.append((sha256_value, test_group))
+
+        if len(train_group) >= 1 and len(test_group) >= 1:
+            exact_duplicates_across_train_test.append((sha256_value, train_group + test_group))
+
+    def write_exact_section(f, title, groups):
+        if not groups:
+            f.write(f"{title}: None\n\n")
+            return
+
+        f.write(f"{title}:\n")
+        for sha256_value, records in groups:
+            f.write(f"  Duplicate Hash: {sha256_value}\n")
+            for record in records:
+                f.write(f"  {format_short_path(record['path'])}\n")
+        f.write("\n")
+
+    with open(similarity_check_path, "w", encoding="utf-8") as f:
+        f.write("Similarity / Duplicate Leakage Check\n")
+        f.write("Exact duplicates use SHA-256 file hash.\n\n")
+
+        write_exact_section(f, "Exact Duplicates Within Train", exact_duplicates_within_train)
+        write_exact_section(f, "Exact Duplicates Within Test", exact_duplicates_within_test)
+        write_exact_section(f, "Exact Duplicates Across Train and Test", exact_duplicates_across_train_test)
+
+    print(f"[INFO] Similarity leakage check results written to: {similarity_check_path}")

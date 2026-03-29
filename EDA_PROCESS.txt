@@ -13,7 +13,7 @@ You should know:
   + prediction
 - number of images in each class inside each split
 
-Why matter?
+Why this matter?
 - confirms the dataset was loaded correctly
 - shows whether class imbalance exists
 - helps you describe the dataset formally in the report
@@ -31,7 +31,7 @@ You should detect:
 - duplicated filenames
 - non-image files accidentally inside folders
 
-Why matters?
+Why this matters?
 - broken files can crash training code
 - duplicates can bias the model
 - dirty folders often cause hidden bugs
@@ -47,447 +47,60 @@ You should inspect:
 - data type if loaded as arrays
 - file format distribution: jpg, png, jpeg,...
 
-Why this matters:
+Why this matters?
 - preprocessing depends on image consistency
 - if some images are grayscale or RGBA, you may need conversion to RGB
 - if sizes differ, resizing must be included
 
 ------------------------------------------------------------
 
-4. Class balance
+4. Similarity / duplicate leakage check
+This is especially important if train and test are separated already.
+You should try to detect:
+- exact duplicates within train
+- exact duplicates within test
+- duplicates across train and test
 
-This is one of the most important EDA parts for classification.
+Why this matters?
+- leakage makes model performance look better than it really is
+- common issue in image datasets
 
-You should calculate:
 
-count per class
-percentage per class
-imbalance ratio between largest and smallest class
+------------------------------------------------------------
+OTHERS THING WE COULD CONSIDER
+------------------------------------------------------------
 
-Why this matters:
 
-imbalance affects model bias
-may suggest class weighting, augmentation, or stratified splitting later
-
-Good plot:
-
-bar chart of class counts
-5. Visual inspection by class
-
-Numbers are not enough. You need to actually look at sample images.
-
-You should show:
-
-a few sample images from each class
-maybe 9–16 images per class in a grid
-
-Why this matters:
-
-helps verify labels look correct
-shows visual similarity between classes
-helps you understand task difficulty
-
-For this dataset, some confusing pairs may be:
-
-glacier vs mountain
-buildings vs street
-sea vs glacier in bright scenes
-
-This part is useful for your report because it shows that classification is not trivial.
-
-6. Pixel-level statistics
-
+5. Pixel-level statistics
 This is useful for deciding preprocessing.
-
 You should compute:
+- mean pixel value per channel (R, G, B)
+- standard deviation per channel
+- min and max pixel values
+- overall pixel intensity histogram
+- per-channel histograms
 
-mean pixel value per channel (R, G, B)
-standard deviation per channel
-min and max pixel values
-overall pixel intensity histogram
-per-channel histograms
+Why this matters?
+- helps decide normalization
+- shows whether images are too dark, too bright, or low contrast
+- useful if you later standardize input using dataset mean/std
 
-Why this matters:
+Typical report sentence: The dataset-wide RGB mean and standard deviation were computed to support normalization during preprocessing.
 
-helps decide normalization
-shows whether images are too dark, too bright, or low contrast
-useful if you later standardize input using dataset mean/std
+------------------------------------------------------------
 
-Typical report sentence:
-
-The dataset-wide RGB mean and standard deviation were computed to support normalization during preprocessing.
-
-7. Brightness, contrast, and quality analysis
-
+6. Brightness, contrast, and quality analysis
 This is not always mandatory, but it is very useful.
-
 You should examine:
+- average brightness per image
+- contrast distribution
+- blurry images
+- very dark or very bright outliers
 
-average brightness per image
-contrast distribution
-blurry images
-very dark or very bright outliers
-
-Why this matters:
-
-low-quality images may reduce model performance
-shows whether augmentation or filtering is needed
+Why this matters?
+- low-quality images may reduce model performance
+- shows whether augmentation or filtering is needed
 
 Possible metrics:
-
-mean grayscale intensity
-variance of Laplacian for blur detection
-8. Possible outliers or suspicious samples
-
-Try to find images that do not fit their class well.
-
-You should identify:
-
-unusual aspect/content
-mislabeled-looking samples
-very noisy images
-images with text/watermarks/borders
-
-Why this matters:
-
-label noise hurts training
-strong outliers may need manual review
-
-You do not need perfect detection here. Even showing a few suspicious samples is already good EDA.
-
-9. Similarity / duplicate leakage check
-
-This is especially important if train and test are separated already.
-
-You should try to detect:
-
-exact duplicates within train
-exact duplicates within test
-duplicates across train and test
-
-Why this matters:
-
-leakage makes model performance look better than it really is
-common issue in image datasets
-
-You can start with:
-
-file hash comparison
-perceptual hash for near-duplicates
-10. Split consistency
-
-Check whether train/test/prediction are consistent.
-
-You should verify:
-
-same class folders exist where expected
-same image format style across splits
-same resolution style across splits
-no class missing in train or test
-
-Why this matters:
-
-inconsistent splits create preprocessing bugs
-missing classes in one split can distort evaluation
-11. Preprocessing-related findings
-
-EDA should help you decide what preprocessing is needed.
-
-By the end of EDA, you should be able to answer:
-
-do images need resizing?
-do all images need RGB conversion?
-should pixel values be scaled to [0,1]?
-should normalization by mean/std be used?
-is augmentation needed?
-is class balancing needed?
-are corrupted or duplicate files removed?
-
-So EDA is not just “describe the dataset,” but also “prepare the preprocessing plan.”
-
-Minimum EDA checklist for your assignment
-
-If you want the essential version only, collect these first:
-
-dataset size and split counts
-class distribution
-sample images per class
-image size/channel verification
-corrupted file check
-pixel mean/std
-brightness / intensity distribution
-duplicate check
-summary of preprocessing decisions
-
-That is already strong enough for most machine learning assignments.
-
-Good outputs your Python file should generate later
-
-When we write the Python EDA file, I suggest it should produce:
-
-dataset_summary.txt
-class_distribution.csv
-image_properties.csv
-corrupted_files.txt
-duplicate_files.txt
-pixel_statistics.txt
-eda_samples.png
-class_distribution.png
-image_size_distribution.png
-pixel_histogram.png
-brightness_distribution.png
-
-This makes your EDA reproducible and report-friendly.1. Basic dataset overview
-
-This is the first layer of EDA.
-
-You should know:
-
-total number of images
-number of classes
-class names and label mapping
-number of images in each split:
-train
-test
-prediction
-number of images in each class inside each split
-
-Why this matters:
-
-confirms the dataset was loaded correctly
-shows whether class imbalance exists
-helps you describe the dataset formally in the report
-
-Example outputs:
-
-total images: 25,000
-train: 14,000
-test: 3,000
-prediction: 7,000
-class distribution bar chart
-2. File and data integrity checks
-
-Before any model work, check whether the dataset is clean.
-
-You should detect:
-
-corrupted images
-unreadable files
-empty files
-wrong file extensions
-duplicate images
-duplicated filenames
-non-image files accidentally inside folders
-
-Why this matters:
-
-broken files can crash training code
-duplicates can bias the model
-dirty folders often cause hidden bugs
-3. Image properties
-
-Even though the dataset says 150×150, you should still verify it.
-
-You should inspect:
-
-image width and height distribution
-whether all images are truly 150×150
-number of channels:
-grayscale
-RGB
-RGBA
-data type if loaded as arrays
-file format distribution:
-jpg
-png
-jpeg
-
-Why this matters:
-
-preprocessing depends on image consistency
-if some images are grayscale or RGBA, you may need conversion to RGB
-if sizes differ, resizing must be included
-4. Class balance
-
-This is one of the most important EDA parts for classification.
-
-You should calculate:
-
-count per class
-percentage per class
-imbalance ratio between largest and smallest class
-
-Why this matters:
-
-imbalance affects model bias
-may suggest class weighting, augmentation, or stratified splitting later
-
-Good plot:
-
-bar chart of class counts
-5. Visual inspection by class
-
-Numbers are not enough. You need to actually look at sample images.
-
-You should show:
-
-a few sample images from each class
-maybe 9–16 images per class in a grid
-
-Why this matters:
-
-helps verify labels look correct
-shows visual similarity between classes
-helps you understand task difficulty
-
-For this dataset, some confusing pairs may be:
-
-glacier vs mountain
-buildings vs street
-sea vs glacier in bright scenes
-
-This part is useful for your report because it shows that classification is not trivial.
-
-6. Pixel-level statistics
-
-This is useful for deciding preprocessing.
-
-You should compute:
-
-mean pixel value per channel (R, G, B)
-standard deviation per channel
-min and max pixel values
-overall pixel intensity histogram
-per-channel histograms
-
-Why this matters:
-
-helps decide normalization
-shows whether images are too dark, too bright, or low contrast
-useful if you later standardize input using dataset mean/std
-
-Typical report sentence:
-
-The dataset-wide RGB mean and standard deviation were computed to support normalization during preprocessing.
-
-7. Brightness, contrast, and quality analysis
-
-This is not always mandatory, but it is very useful.
-
-You should examine:
-
-average brightness per image
-contrast distribution
-blurry images
-very dark or very bright outliers
-
-Why this matters:
-
-low-quality images may reduce model performance
-shows whether augmentation or filtering is needed
-
-Possible metrics:
-
-mean grayscale intensity
-variance of Laplacian for blur detection
-8. Possible outliers or suspicious samples
-
-Try to find images that do not fit their class well.
-
-You should identify:
-
-unusual aspect/content
-mislabeled-looking samples
-very noisy images
-images with text/watermarks/borders
-
-Why this matters:
-
-label noise hurts training
-strong outliers may need manual review
-
-You do not need perfect detection here. Even showing a few suspicious samples is already good EDA.
-
-9. Similarity / duplicate leakage check
-
-This is especially important if train and test are separated already.
-
-You should try to detect:
-
-exact duplicates within train
-exact duplicates within test
-duplicates across train and test
-
-Why this matters:
-
-leakage makes model performance look better than it really is
-common issue in image datasets
-
-You can start with:
-
-file hash comparison
-perceptual hash for near-duplicates
-10. Split consistency
-
-Check whether train/test/prediction are consistent.
-
-You should verify:
-
-same class folders exist where expected
-same image format style across splits
-same resolution style across splits
-no class missing in train or test
-
-Why this matters:
-
-inconsistent splits create preprocessing bugs
-missing classes in one split can distort evaluation
-11. Preprocessing-related findings
-
-EDA should help you decide what preprocessing is needed.
-
-By the end of EDA, you should be able to answer:
-
-do images need resizing?
-do all images need RGB conversion?
-should pixel values be scaled to [0,1]?
-should normalization by mean/std be used?
-is augmentation needed?
-is class balancing needed?
-are corrupted or duplicate files removed?
-
-So EDA is not just “describe the dataset,” but also “prepare the preprocessing plan.”
-
-Minimum EDA checklist for your assignment
-
-If you want the essential version only, collect these first:
-
-dataset size and split counts
-class distribution
-sample images per class
-image size/channel verification
-corrupted file check
-pixel mean/std
-brightness / intensity distribution
-duplicate check
-summary of preprocessing decisions
-
-That is already strong enough for most machine learning assignments.
-
-Good outputs your Python file should generate later
-
-When we write the Python EDA file, I suggest it should produce:
-
-dataset_summary.txt
-class_distribution.csv
-image_properties.csv
-corrupted_files.txt
-duplicate_files.txt
-pixel_statistics.txt
-eda_samples.png
-class_distribution.png
-image_size_distribution.png
-pixel_histogram.png
-brightness_distribution.png
-
-This makes your EDA reproducible and report-friendly.
+- mean grayscale intensity
+- variance of Laplacian for blur detection
