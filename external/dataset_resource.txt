@@ -1,4 +1,0 @@
-Download the zip file from:
-https://www.kaggle.com/datasets/puneet6060/intel-image-classification
-
-Then put it in ./dataset folder.

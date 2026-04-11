@@ -1,0 +1,32 @@
+{
+    "normalization": {
+        "mean": [
+            0.4308653645119043,
+            0.45771378982006583,
+            0.4542288688218409
+        ],
+        "std": [
+            0.23576733709046505,
+            0.2346516949937325,
+            0.24307112080098198
+        ]
+    },
+    "input_size": [
+        150,
+        150
+    ],
+    "classes": [
+        "buildings",
+        "forest",
+        "glacier",
+        "mountain",
+        "sea",
+        "street"
+    ],
+    "total_clean_images": 16928,
+    "splits": {
+        "train": "seg_train",
+        "val": "seg_val",
+        "test": "seg_test"
+    }
+}

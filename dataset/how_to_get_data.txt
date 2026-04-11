@@ -1,5 +1,0 @@
-Download the zip file from:
-https://www.kaggle.com/datasets/puneet6060/intel-image-classification
-
-Then put it in the .\dataset folder, then 'python eda.py',
-or just extract the zip file if you wanna see the data
